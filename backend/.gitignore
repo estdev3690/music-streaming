@@ -1,0 +1,29 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+.env.local
+
+# Build directories
+/dist
+/build
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# IDE specific files
+.vscode/
+.idea/
+
+# Uploads directory (backend)
+backend/uploads/
+
+# Frontend cache
+.cache/
+
+# System Files
+.DS_Store
+Thumbs.db
