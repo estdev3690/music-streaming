@@ -2,8 +2,8 @@
 
 A full-stack MERN application with separate admin and user interfaces for music management and streaming.
 
-![Application Screenshot](./public/musicstreamingimage.png)
-![Admin Panel Screenshot](./public/musicstreamingadminpanel.png)
+![Application Screenshot](./frontend/public/musicstreamingimage.png)
+![Admin Panel Screenshot](./frontend/public/musicstreamingadminpanel.png)
 
 ## Project Overview
 This application consists of two main interfaces:
