@@ -34,8 +34,8 @@ const register = async (req, res) => {
       expiresIn: "7d",
     });
     res.cookie(token, {
-      httpOnly: false,
-      secure: false,
+      httpOnly: true,
+      secure: true,
       sameSite: "Lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -87,8 +87,8 @@ const login = async (req, res) => {
     });
 
     res.cookie(token, {
-      httpOnly: false,
-      secure: false,
+      httpOnly: true,
+      secure: true,
       sameSite: "Lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
