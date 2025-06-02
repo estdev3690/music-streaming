@@ -26,8 +26,12 @@ This application consists of two main interfaces:
 
 ## Navigation Between Panels
 1. **Accessing Admin Panel**:
-   - Navigate to `/admin` route
-   - Requires admin privileges (login with admin credentials)
+   - Navigate to `/add-music` route
+            (or)
+         login with
+     email:admin@gmail.com
+     password:admin
+
 2. **Returning to User Panel**:
    - Click "User View" in admin navigation
    - Or navigate to root URL `/`
@@ -45,3 +49,18 @@ This application consists of two main interfaces:
 1. Navigate to backend directory:
 ```bash
 cd backend
+
+add .env file with
+PORT=5000
+MONGO_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+npm install
+node server.js    
+```
+
+2.navigate to frontend directory:
+```bash
+cd frontend
+npm install
+npm run dev
+```   
