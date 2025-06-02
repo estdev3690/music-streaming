@@ -7,7 +7,7 @@ import cookie from "js-cookie";
 export const PlayerContext = createContext();
 
 const PlayerContextProvider = ({ children }) => {
-  const backendURL = "http://localhost:4000";
+  const backendURL = "https://music-streaming-d0bo.onrender.com";
   const [token, setToken] = useState(Boolean(cookie.get("token")));
 
 
