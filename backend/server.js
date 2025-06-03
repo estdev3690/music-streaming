@@ -22,11 +22,37 @@ initGridFS()
 const app = express()
 const PORT = process.env.PORT || 3000
 
+// Helper function to normalize origin URL
+const normalizeOrigin = (origin) => {
+    if (!origin) return origin;
+    return origin.endsWith('/') ? origin.slice(0, -1) : origin;
+};
+
+// Configure CORS
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = process.env.FRONTEND_URL 
+            ? [normalizeOrigin(process.env.FRONTEND_URL)]
+            : ['https://music-streaming-gilt.vercel.app'];
+            
+        const normalizedOrigin = normalizeOrigin(origin);
+        
+        if (allowedOrigins.includes(normalizedOrigin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json())
-app.use(cors({
-    origin: process.env.FRONTEND_URL || '*',
-    credentials: true
-}))
 
 // Serve files from GridFS with proper content types
 app.get('/upload/:fileId', async (req, res) => {
