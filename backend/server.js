@@ -5,27 +5,38 @@ import connectDB from './config/mongoDB.js'
 import adminRouter from './routes/adminRoutes.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { initGridFS, getFileStream } from './utils/gridfs.js'
 
 dotenv.config()
-connectDB()
-const app = express()
-const PORT = process.env.PORT || 3000
+
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Set uploads directory based on environment
-const uploadsDir = process.env.NODE_ENV === 'production' 
-    ? '/opt/render/project/src/uploads'
-    : path.join(__dirname, 'uploads')
+// Connect to MongoDB and initialize GridFS
+await connectDB()
+initGridFS()
+
+const app = express()
+const PORT = process.env.PORT || 3000
 
 app.use(express.json())
 app.use(cors())
 
-// Serve static files from the uploads directory
-app.use('/upload', express.static(uploadsDir))
-
-// Export uploads directory path for multer configuration
-export const UPLOADS_DIR = uploadsDir
+// Serve files from GridFS
+app.get('/upload/:fileId', async (req, res) => {
+    try {
+        const fileStream = await getFileStream(req.params.fileId);
+        res.set('Content-Type', 'application/octet-stream');
+        fileStream.on('error', (error) => {
+            console.error('Error streaming file:', error);
+            res.status(404).json({ error: 'File not found' });
+        });
+        fileStream.pipe(res);
+    } catch (error) {
+        console.error('Error accessing file:', error);
+        res.status(400).json({ error: error.message });
+    }
+});
 
 // API routes
 app.use('/api/admin', adminRouter)
@@ -37,14 +48,14 @@ app.get('/api/health', (req, res) => {
 
 // Serve static files from the frontend build
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../frontend/dist')))
+    const frontendPath = path.join(__dirname, '../frontend/dist');
+    app.use(express.static(frontendPath));
     
-    // Handle client-side routing
     app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../frontend/dist/index.html'))
-    })
+        res.sendFile(path.join(frontendPath, 'index.html'));
+    });
 }
 
 app.listen(PORT, () => {
-    console.log(`server listening on port ${PORT}`)
+    console.log(`Server listening on port ${PORT}`)
 })
