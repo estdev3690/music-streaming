@@ -3,7 +3,6 @@ import { PlayerContext } from "../context/PlayerContext";
 import { useNavigate } from "react-router-dom";
 import { FiMusic, FiImage, FiCheckCircle } from "react-icons/fi"; // Add any icons you like
 import { toast } from "react-toastify";
-import axios from "axios";
 
 // Optional custom icons
 const MusicSuccessUploaded = () => (
@@ -14,7 +13,7 @@ const ImageSuccessUploaded = () => (
 );
 
 export default function UploadSong() {
-  const { backendURL } = useContext(PlayerContext);
+  const { backendURL, api } = useContext(PlayerContext);
   const navigate = useNavigate();
 
   const [image, setImage] = useState(null);
@@ -32,18 +31,13 @@ export default function UploadSong() {
       formData.append("artist", songData.artist);
       formData.append("music", song);
       formData.append("image", image);
-      console.log("Backend URL: ", backendURL);
 
-      const { data } = await axios.post(
-        `${backendURL}/api/admin/add-music`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      console.log("Upload Response: ", data);
+      const { data } = await api.post('/api/admin/add-music', formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
       if (data.success) {
         toast.success(data.message || "Upload succeeded");
         navigate("/list-songs");
@@ -54,8 +48,8 @@ export default function UploadSong() {
         toast.error(data?.message || "Unexpected response from server.");
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Error occurred while uploading the song.");
+      console.error("Upload error:", error);
+      toast.error(error.response?.data?.message || "Error occurred while uploading the song.");
     }
   };
 

@@ -1,22 +1,20 @@
 import React, { useContext, useState, useEffect } from "react";
-import {PlayerContext} from "../context/PlayerContext";
-import axios from "axios";
+import { PlayerContext } from "../context/PlayerContext";
 import MusicCard from "../components/MusicCard";
 
 export default function ListSong() {
-  const {backendURL} = useContext(PlayerContext);
-
+  const { backendURL, api } = useContext(PlayerContext);
   const [musics, setMusics] = useState([]);
 
   const fetchSongs = async () => {
     try {
-      const { data } = await axios.get(`${backendURL}/api/admin/get-music`);
-
+      const { data } = await api.get('/api/admin/get-music');
       setMusics(data.musics);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching songs:", error);
     }
   };
+
   useEffect(() => {
     fetchSongs();
   }, []);

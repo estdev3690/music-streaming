@@ -6,10 +6,21 @@ import cookie from "js-cookie";
 // ✅ This is what was missing:
 export const PlayerContext = createContext();
 
+// Configure axios defaults
+axios.defaults.withCredentials = true;
+
 const PlayerContextProvider = ({ children }) => {
   const backendURL = "https://music-streaming-d0bo.onrender.com";
   const [token, setToken] = useState(Boolean(cookie.get("token")));
 
+  // Configure axios instance with proper defaults
+  const api = axios.create({
+    baseURL: backendURL,
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
 
   const handleRegister = async (name, email, password) => {
     try {
@@ -22,14 +33,9 @@ const PlayerContextProvider = ({ children }) => {
         return;
       }
   
-      const { data } = await axios.post(
-        `${backendURL}/api/admin/register`,
-        { username: trimmedName, email: trimmedEmail, password },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+      const { data } = await api.post(
+        '/api/admin/register',
+        { username: trimmedName, email: trimmedEmail, password }
       );
   
       if (data.success) {
@@ -50,16 +56,15 @@ const PlayerContextProvider = ({ children }) => {
 
   const handleLogin = async (email, password) => {
     try {
-      const { data } = await axios.post(
-        `${backendURL}/api/admin/login`,
-        { email, password },
-        { headers: { "Content-Type": "application/json" } }
+      const { data } = await api.post(
+        '/api/admin/login',
+        { email, password }
       );
   
       if (data.success) {
         localStorage.setItem("token", data.token);
         setToken(true);
-        axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+        api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
         toast.success(data.message || "User login Successfully");
         return { success: true, user: data.user };  // <--- Return user info
       }
@@ -76,10 +81,11 @@ const PlayerContextProvider = ({ children }) => {
 
   const fetchSongs = async () => {
     try {
-      const { data } = await axios.get(`${backendURL}/api/admin/get-music`);
+      const { data } = await api.get('/api/admin/get-music');
       setSongsData(data.musics);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching songs:", error);
+      toast.error("Failed to fetch songs");
     }
   };
 
@@ -95,6 +101,7 @@ const PlayerContextProvider = ({ children }) => {
     setToken,
     handleRegister,
     handleLogin,
+    api // Export the configured axios instance
   };
 
   return (

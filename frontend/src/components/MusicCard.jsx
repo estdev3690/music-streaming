@@ -2,11 +2,10 @@ import React, { useContext } from "react";
 import { PlayerContext } from "../context/PlayerContext";
 import { MdDelete } from "react-icons/md";
 import { IoIosMicrophone } from "react-icons/io";
-import axios from "axios";
 import { toast } from "react-toastify";
 
 export default function MusicCard({ music, fetchSongs }) {
-  const { backendURL } = useContext(PlayerContext);
+  const { backendURL, api } = useContext(PlayerContext);
 
   const filename = music.filePath.split("\\").pop().split("/").pop();
   const audioSrc = `${backendURL}/upload/${filename}`;
@@ -16,15 +15,14 @@ export default function MusicCard({ music, fetchSongs }) {
 
   const handleDelete = async (id) => {
     try {
-      const { data } = await axios.delete(
-        `${backendURL}/api/admin/delete-music/${id}`
-      );
+      const { data } = await api.delete(`/api/admin/delete-music/${id}`);
       if (data.success) {
         toast.success(data.message);
         fetchSongs();
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error deleting song:", error);
+      toast.error(error.response?.data?.message || "Error deleting song");
     }
   };
 
