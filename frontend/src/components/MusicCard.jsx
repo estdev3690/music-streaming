@@ -7,11 +7,9 @@ import { toast } from "react-toastify";
 export default function MusicCard({ music, fetchSongs }) {
   const { backendURL, api } = useContext(PlayerContext);
 
-  const filename = music.filePath.split("\\").pop().split("/").pop();
-  const audioSrc = `${backendURL}/upload/${filename}`;
-
-  const imageFilename = music.imageFilePath?.split("\\").pop().split("/").pop();
-  const imageSrc = `${backendURL}/upload/${imageFilename}`;
+  // Use the musicUrl and imageUrl from the API response
+  const audioSrc = `${backendURL}/upload/${music.musicFileId}`;
+  const imageSrc = `${backendURL}/upload/${music.imageFileId}`;
 
   const handleDelete = async (id) => {
     try {

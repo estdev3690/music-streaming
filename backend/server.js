@@ -57,6 +57,11 @@ app.use(express.json())
 // Serve files from GridFS with proper content types
 app.get('/upload/:fileId', async (req, res) => {
     try {
+        // Validate fileId format
+        if (!mongoose.Types.ObjectId.isValid(req.params.fileId)) {
+            return res.status(400).json({ error: 'Invalid file ID format' });
+        }
+
         const fileId = new mongoose.Types.ObjectId(req.params.fileId);
         const bucket = new GridFSBucket(mongoose.connection.db, {
             bucketName: 'uploads'
@@ -71,12 +76,12 @@ app.get('/upload/:fileId', async (req, res) => {
         const file = files[0];
         
         // Set the appropriate content type
-        res.set('Content-Type', file.contentType);
+        res.set('Content-Type', file.contentType || 'application/octet-stream');
         res.set('Accept-Ranges', 'bytes');
 
         // Handle range requests for audio streaming
         const range = req.headers.range;
-        if (range && file.contentType.startsWith('audio/')) {
+        if (range && file.contentType?.startsWith('audio/')) {
             const parts = range.replace(/bytes=/, "").split("-");
             const start = parseInt(parts[0], 10);
             const end = parts[1] ? parseInt(parts[1], 10) : file.length - 1;
