@@ -33,10 +33,11 @@ export default function NewReleases({
       audioRef.current.pause();
     }
 
-    const filename = song.filePath?.split("\\").pop().split("/").pop();
-    const audioSrc = `${backendURL}/upload/${filename}`;
+    const audioSrc = `${backendURL}/upload/${song.musicFileId}`;
     audioRef.current.src = audioSrc;
-    audioRef.current.play();
+    audioRef.current.play().catch(error => {
+      console.error("Error playing audio:", error);
+    });
     setPlayingSong(song);
 
     audioRef.current.onloadedmetadata = () => {
@@ -47,7 +48,7 @@ export default function NewReleases({
       setCurrentTime(audioRef.current.currentTime);
     };
 
-    const imageUrl = `${backendURL}/${song.imageFilePath}`.replace(/\\/g, "/");
+    const imageUrl = `${backendURL}/upload/${song.imageFileId}`;
     setCurrentSongImage(imageUrl);
     setCurrentSongTitle(song.title);
     setCurrentSongArtist(song.artist);
@@ -80,11 +81,7 @@ export default function NewReleases({
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {songsData.map((song) => {
           const isPlaying = playingSong && playingSong._id === song._id;
-          const imagePath = `${backendURL}/upload/${song.imageFilePath
-            ?.split("\\")
-            .pop()
-            .split("/")
-            .pop()}`;
+          const imagePath = `${backendURL}/upload/${song.imageFileId}`;
 
           return (
             <div
@@ -107,7 +104,7 @@ export default function NewReleases({
                         style={{
                           writingMode: "vertical-rl",
                           transform: "rotate(180deg)",
-                        }} // Optional: vertical label
+                        }}
                       >
                         Volume
                       </label>
