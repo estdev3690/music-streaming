@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import path from "path";
 import musicModel from "../models/musicModel.js";
 import fs from "fs";
+import { uploadToGridFS, deleteFile } from "../utils/gridfs.js";
 
 const register = async (req, res) => {
   try {
@@ -120,8 +121,10 @@ const uploadMusic = async (req, res) => {
         .status(400)
         .json({ success: false, message: "All fields are required" });
     }
+
     const musicFile = req.files.music?.[0];
     const imageFile = req.files.image?.[0];
+
     if (!musicFile) {
       return res
         .status(400)
@@ -132,44 +135,39 @@ const uploadMusic = async (req, res) => {
         .status(400)
         .json({ success: false, message: "no imagefile found" });
     }
-    const allowedExtensions = [
-      ".mp3",
-      ".wav",
-      ".webp",
-      ".jpg",
-      ".png",
-      ".jpeg",
-    ];
-    const musicExt = path.extname(musicFile.originalname).toLowerCase();
-    const imageExt = path.extname(imageFile.originalname).toLowerCase();
-    if (
-      !allowedExtensions.includes(musicExt) ||
-      !allowedExtensions.includes(imageExt)
-    ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "invalid extension found" });
-    }
 
-    const filePath = musicFile.path;
-    const imageFilePath = imageFile.path;
+    // Upload files to GridFS
+    const musicFileName = `${Date.now()}_${musicFile.originalname.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+    const imageFileName = `${Date.now()}_${imageFile.originalname.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+
+    const [musicFileId, imageFileId] = await Promise.all([
+      uploadToGridFS(musicFile, musicFileName),
+      uploadToGridFS(imageFile, imageFileName)
+    ]);
 
     const music = new musicModel({
       title,
       artist,
-      filePath,
-      imageFilePath,
+      musicFileId,
+      imageFileId
     });
+    
     await music.save();
 
-    res
-      .status(201)
-      .json({ success: true, message: "music uploaded successfully",music });
+    res.status(201).json({ 
+      success: true, 
+      message: "music uploaded successfully",
+      music: {
+        ...music.toObject(),
+        musicUrl: `/upload/${musicFileId}`,
+        imageUrl: `/upload/${imageFileId}`
+      }
+    });
   } catch (error) {
     console.log(error);
     return res
       .status(500)
-      .json({ success: false, message: "Internal upload Error in Login" });
+      .json({ success: false, message: "Internal upload Error" });
   }
 };
 
@@ -182,32 +180,50 @@ const getMusic = async (req, res) => {
         .json({ success: false, message: "no songs found" });
     }
 
-    res.json({ success: true, musics });
+    // Add URLs for music and image files
+    const musicList = musics.map(music => ({
+      ...music.toObject(),
+      musicUrl: `/upload/${music.musicFileId}`,
+      imageUrl: `/upload/${music.imageFileId}`
+    }));
+
+    res.json({ success: true, musics: musicList });
   } catch (error) {
     console.log(error);
     return res
       .status(500)
-      .json({ success: false, message: "Internal upload Error in Login" });
+      .json({ success: false, message: "Internal Error in Get Music" });
   }
 };
 
 const deleteMusic = async (req, res) => {
   try {
     const { id } = req.params;
-    const music = await musicModel.findByIdAndDelete(id);
+    const music = await musicModel.findById(id);
+    
     if (!music) {
       return res
         .status(401)
         .json({ success: false, message: "music not found to delete" });
     }
+
+    // Delete files from GridFS
+    await Promise.all([
+      deleteFile(music.musicFileId),
+      deleteFile(music.imageFileId)
+    ]);
+
+    // Delete the music document
+    await musicModel.findByIdAndDelete(id);
+
     res
       .status(200)
-      .json({ success: true, message: "music deleted sucessfully" });
+      .json({ success: true, message: "music deleted successfully" });
   } catch (error) {
     console.log(error);
     return res
       .status(500)
-      .json({ success: false, message: "Internal upload Error in Login" });
+      .json({ success: false, message: "Internal Error in Delete Music" });
   }
 };
 

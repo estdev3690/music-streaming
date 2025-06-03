@@ -10,12 +10,12 @@ const musicSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    filePath: {
-      type: String,
+    musicFileId: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
-    imageFilePath: {
-      type: String,
+    imageFileId: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
   },
